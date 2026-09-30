@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3D Print Cost & Price Calculator (open source)</title>
+<meta name="description" content="Open-source 3D print cost and selling price calculator: filament, electricity, printer wear, failures, marketplace fees and profit per hour. English, Português, Español.">
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#111827;--muted:#64748b;--line:#e5e9f2;--accent:#1f5eff;--amber:#ffc21a}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1117;--card:#151a22;--ink:#e8ecf2;--muted:#9ba5b4;--line:#262d38;--accent:#6f9bff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:880px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:26px;margin:8px 0}p.lede{color:var(--muted);margin:0 0 16px}
+.langs button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 10px;cursor:pointer;font-weight:700}
+.langs button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:720px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px}
+h2{font-size:18px;margin:0 0 12px}
+label{display:block;font-size:13px;font-weight:700;margin:10px 0 4px}
+input{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:16px}
+.big{font-size:34px;font-weight:800;margin:4px 0;background:linear-gradient(transparent 60%,rgba(255,194,26,.55) 60%);display:inline-block}
+dl{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:10px 0 0;font-size:15px}dt{color:var(--muted)}dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+footer{margin-top:22px;font-size:14px;color:var(--muted)}a{color:var(--accent)}
+code{background:var(--bg);padding:1px 5px;border-radius:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1 data-i="title"></h1><p class="lede" data-i="lede"></p></div>
+    <div class="langs" role="group" aria-label="Language"><button data-l="en">EN</button> <button data-l="pt">PT</button> <button data-l="es">ES</button></div>
+  </header>
+  <div class="grid">
+    <section class="card">
+      <h2 data-i="h_cost"></h2>
+      <label for="grams" data-i="grams"></label><input id="grams" type="number" value="50" min="0" step="1">
+      <label for="hours" data-i="hours"></label><input id="hours" type="number" value="3" min="0" step="0.1">
+      <label for="kg" data-i="kg"></label><input id="kg" type="number" value="20" min="0" step="0.01">
+      <label for="watts" data-i="watts"></label><input id="watts" type="number" value="120" min="0" step="1">
+      <label for="kwh" data-i="kwh"></label><input id="kwh" type="number" value="0.17" min="0" step="0.01">
+      <label for="printer" data-i="printer"></label><input id="printer" type="number" value="400" min="0" step="1">
+      <label for="life" data-i="life"></label><input id="life" type="number" value="4000" min="1" step="100">
+      <label for="fail" data-i="fail"></label><input id="fail" type="number" value="10" min="0" step="1">
+      <label for="extra" data-i="extra"></label><input id="extra" type="number" value="0" min="0" step="0.01">
+    </section>
+    <section class="card">
+      <h2 data-i="h_result"></h2>
+      <div data-i="cost_label" style="color:var(--muted);font-weight:700;font-size:13px"></div>
+      <div class="big" id="total">–</div>
+      <dl id="rows"></dl>
+      <h2 style="margin-top:22px" data-i="h_price"></h2>
+      <label for="fee" data-i="fee"></label><input id="fee" type="number" value="9.5" min="0" step="0.1">
+      <label for="fixed" data-i="fixed"></label><input id="fixed" type="number" value="0.45" min="0" step="0.01">
+      <label for="margin" data-i="margin"></label><input id="margin" type="number" value="30" min="0" step="1">
+      <div class="big" id="price">–</div>
+      <dl id="prow"></dl>
+    </section>
+  </div>
+  <footer>
+    <p data-i="formula"></p>
+    <p><span data-i="more"></span> <a href="https://sizebench.com/3d-printing">SizeBench 3D printing calculators</a> · MIT license</p>
+  </footer>
+</div>
+<script>
+const T={
+ en:{title:"3D Print Cost & Price Calculator",lede:"Real cost per print and a selling price that covers marketplace fees. Open source.",h_cost:"Print",grams:"Model weight (g)",hours:"Print time (h)",kg:"Filament price per kg",watts:"Printer average power (W)",kwh:"Electricity price per kWh",printer:"Printer price",life:"Printer lifetime (h)",fail:"Failure rate (%)",extra:"Labor, paint, packaging",h_result:"Result",cost_label:"COST PER PRINT",fil:"Filament",elec:"Electricity",wear:"Printer wear",failc:"Failure allowance",ext:"Extras",perh:"Cost per print hour",h_price:"Selling price",fee:"Marketplace fee (%)",fixed:"Fixed fee per sale",margin:"Desired profit margin (%)",fees:"Fees",profit:"Your profit",pph:"Profit per printer hour",bad:"Fee + margin must be under 100%",formula:"Price = (cost + fixed fee) ÷ (1 − fee % − margin %). Fees are charged on the selling price, not on your cost.",more:"More free calculators (filament m ↔ g, e-steps, resin, miniature scale):"},
+ pt:{title:"Calculadora de Custo e Preço de Impressão 3D",lede:"Custo real por peça e um preço de venda que cobre as taxas do marketplace. Código aberto.",h_cost:"Impressão",grams:"Peso da peça (g)",hours:"Tempo de impressão (h)",kg:"Preço do filamento por kg",watts:"Potência média da impressora (W)",kwh:"Tarifa de energia por kWh",printer:"Preço da impressora",life:"Vida útil da impressora (h)",fail:"Taxa de falhas (%)",extra:"Mão de obra, pintura, embalagem",h_result:"Resultado",cost_label:"CUSTO POR PEÇA",fil:"Filamento",elec:"Energia",wear:"Desgaste",failc:"Reserva para falhas",ext:"Extras",perh:"Custo por hora",h_price:"Preço de venda",fee:"Taxa do marketplace (%)",fixed:"Taxa fixa por venda",margin:"Margem de lucro desejada (%)",fees:"Taxas",profit:"Seu lucro",pph:"Lucro por hora de impressora",bad:"Taxa + margem precisa ser menor que 100%",formula:"Preço = (custo + taxa fixa) ÷ (1 − % de taxa − % de margem). A taxa é cobrada sobre o preço de venda, não sobre o custo.",more:"Mais calculadoras grátis (filamento m ↔ g, e-steps, resina, escala):"},
+ es:{title:"Calculadora de Costo y Precio de Impresión 3D",lede:"Costo real por pieza y un precio de venta que cubre las comisiones del marketplace. Código abierto.",h_cost:"Impresión",grams:"Peso de la pieza (g)",hours:"Tiempo de impresión (h)",kg:"Precio del filamento por kg",watts:"Potencia promedio de la impresora (W)",kwh:"Tarifa de luz por kWh",printer:"Precio de la impresora",life:"Vida útil de la impresora (h)",fail:"Tasa de fallas (%)",extra:"Mano de obra, pintura, empaque",h_result:"Resultado",cost_label:"COSTO POR PIEZA",fil:"Filamento",elec:"Electricidad",wear:"Desgaste",failc:"Reserva por fallas",ext:"Extras",perh:"Costo por hora",h_price:"Precio de venta",fee:"Comisión del marketplace (%)",fixed:"Cargo fijo por venta",margin:"Margen de ganancia deseado (%)",fees:"Comisiones",profit:"Su ganancia",pph:"Ganancia por hora de impresora",bad:"Comisión + margen debe ser menor a 100%",formula:"Precio = (costo + cargo fijo) ÷ (1 − % comisión − % margen). La comisión se cobra sobre el precio de venta, no sobre el costo.",more:"Más calculadoras gratis (filamento m ↔ g, e-steps, resina, escala):"}};
+let L=(navigator.language||"en").slice(0,2);if(!T[L])L="en";try{L=localStorage.getItem("lang")||L}catch(e){}
+const $=id=>document.getElementById(id),v=id=>parseFloat($(id).value)||0,fmt=n=>isFinite(n)?n.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):"–";
+function calc(){const t=T[L],g=v("grams"),h=v("hours");
+ const fil=g/1000*v("kg"),el=v("watts")*h/1000*v("kwh"),wr=v("life")>0?v("printer")/v("life")*h:0,fl=(fil+el+wr)*v("fail")/100,ex=v("extra"),tot=fil+el+wr+fl+ex;
+ $("total").textContent=fmt(tot);
+ $("rows").innerHTML=[[t.fil,fil],[t.elec,el],[t.wear,wr],[t.failc,fl],[t.ext,ex],[t.perh,h>0?tot/h:NaN]].map(r=>`<dt>${r[0]}</dt><dd>${fmt(r[1])}</dd>`).join("");
+ const den=1-v("fee")/100-v("margin")/100;
+ if(den<=0){$("price").textContent="–";$("prow").innerHTML=`<dt>${t.bad}</dt><dd></dd>`;return}
+ const p=(tot+v("fixed"))/den,fees=p*v("fee")/100+v("fixed"),pr=p-tot-fees;
+ $("price").textContent=fmt(p);$("prow").innerHTML=[[t.fees,fees],[t.profit,pr],[t.pph,h>0?pr/h:NaN]].map(r=>`<dt>${r[0]}</dt><dd>${fmt(r[1])}</dd>`).join("");}
+function lang(l){L=l;try{localStorage.setItem("lang",l)}catch(e){}document.documentElement.lang=l;
+ document.querySelectorAll("[data-i]").forEach(e=>e.textContent=T[l][e.dataset.i]);
+ document.querySelectorAll("[data-l]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.l===l));calc();}
+document.querySelectorAll("input").forEach(i=>i.addEventListener("input",calc));
+document.querySelectorAll("[data-l]").forEach(b=>b.addEventListener("click",()=>lang(b.dataset.l)));
+lang(L);
+</script>
+</body>
+</html>
