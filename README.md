@@ -8,7 +8,7 @@ A single-file, open-source web app that calculates the **real cost of a 3D print
 - English, Português and Español (auto-detected)
 - One `index.html`: no build, no dependencies, works offline
 
-**Live demo:** enable GitHub Pages (see below) · **Full calculator suite:** [sizebench.com/3d-printing](https://sizebench.com/3d-printing)
+**Live demo:** https://sizebench-calculators.github.io/print-cost-calculator/ · **Full calculator suite:** [sizebench.com/3d-printing](https://sizebench.com/3d-printing)
 
 ## Formulas
 ```
